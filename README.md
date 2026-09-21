@@ -1,4 +1,4 @@
-# ChinaCargo Hub — Faz 1: Veri Modeli ve Roller
+# ChinaCargo Hub — Veri Modeli · Güvenlik · Müşteri Paneli (Faz 1–3)
 
 **Çin'den gelen tüm yükleriniz tek platformda.**
 
@@ -13,7 +13,13 @@ Spec'in 19. bölümündeki geliştirme sırasının ilk adımı: **veri modeli +
 | `supabase/migrations/20260912000003_operations_tables.sql` | shipment_requests, shipment_items, precheck_flags, quotations, quotation_requests, quotation_items, quotation_item_costs, warehouse_receipts, packages, inspections, media_assets, consolidations, consolidation_items, sailing_schedules, containers, container_loads, shipments, shipment_milestones, documents, document_requirements, customs_files, delivery_orders |
 | `supabase/migrations/20260912000004_finance_and_communication.sql` | invoices, invoice_items, payments, expenses, exchange_rates, support_tickets, messages, message_reads, notifications, webhook_endpoints, webhook_deliveries, activity_logs |
 | `supabase/migrations/20260912000005_functions_triggers_views.sql` | Belge numaralandırma (TLP/TKL/SVK…), depo teslim kodu (CC-IST-2026-00428-S01), koli QR, rol-kapsam koruması, hesaplama motoru (CBM, W/M, hacimsel ağırlık, kural seçimi), teklif toplamı, milestone → güncel durum + müşteri bildirimi, işlem kaydı, 7 özet view, tüm tablolarda RLS açık |
+| `supabase/migrations/20260915000006_auth_and_rls_helpers.sql` | **(Faz 2)** `auth.users → public.users` senkron tetikleyicisi, RLS yardımcı fonksiyonları, yetkiler (GRANT) |
+| `supabase/migrations/20260915000007_rls_policies.sql` | **(Faz 2)** 51 tablo için 101 RLS politikası |
+| `supabase/migrations/20260915000008_rpc_functions.sql` | **(Faz 2)** Kritik geçiş RPC'leri (teklif onayı/revizyon, ödeme bildirimi/doğrulama, milestone, gümrük atama) |
+| `supabase/migrations/20260915000009_storage.sql` | **(Faz 2)** `documents` ve `media` kovaları + Storage politikaları (Supabase yoksa no-op) |
 | `supabase/seed.sql` | Demo senaryosu (spec bölüm 18): Örnek İthalat A.Ş., 3 tedarikçi, eksik 2 koli, hasarlı palet, konsolide teklif (18 kalem), Shanghai → Ambarlı seferi, %64,7 dolu konteyner, gümrük dosyası, avans ödemesi, mesajlar |
+| `supabase/tests/*.sql` | **(Faz 2)** RLS izolasyon ve RPC/yazma testleri (psql ile) |
+| `docs/security-and-rls.md` | **(Faz 2)** Güvenlik modeli, politika özeti, RPC listesi, test sonuçları |
 | `docs/project-assumptions.md` | **Proje Varsayımları** (40 madde) |
 | `docs/roles-and-permissions.md` | Kullanıcı rolleri ve yetki tablosu |
 | `docs/workflow.md` | Uygulama iş akışı, durum makineleri, 21 adım |
@@ -39,6 +45,8 @@ supabase gen types typescript --local > src/types/database.ts
 
 Barındırılan projeye taşırken: `supabase link --project-ref <ref>` sonra `supabase db push`. Seed'deki `auth.users` satırları lokal içindir; barındırılan projede demo kullanıcıları Dashboard'dan aynı e-postalarla açın.
 
+RLS ve RPC testlerini çalıştırmak (lokal): `psql "$(supabase status -o env | grep DB_URL | cut -d= -f2-)" -f supabase/tests/01_rls_isolation.sql` ve `.../02_rpc_and_writes.sql`. Beklenen sonuçlar `docs/security-and-rls.md` içindedir.
+
 ## Demo hesaplar (şifre: `Demo1234!`)
 
 | E-posta | Rol | Şirket |
@@ -60,11 +68,44 @@ Barındırılan projeye taşırken: `supabase link --project-ref <ref>` sonra `s
 - Gümrük dosyası **GMR-2026-00214** çözüm ortağında, ticari fatura + menşe belgesi bekliyor (3 eksik evrak uyarısı).
 - Finans: %50 avans ödendi (1.742,80 USD), %50 bakiye 18 Eylül vadeli. 4 gerçekleşen masraf, 1 beklenmeyen.
 
+## Faz 3 — Next.js frontend (müşteri paneli)
+
+Uçtan uca çalışan bir dikey dilim: **giriş → panel → tedarikçiler → taşıma talebi → teklif onayı**. Statik ekran değil; gerçek form doğrulama (Zod), canlı hesaplama (CBM ve hacim/ağırlık W-M) ve Supabase RPC çağrıları (`approve_quotation`, `request_quotation_revision`) içerir. Tüm veri erişimi Faz 2'deki RLS politikalarına tabidir; müşteri yalnızca kendi verisini ve satış kalemlerini görür, maliyet/masraf görmez.
+
+**Stack:** Next.js 14 (App Router), TypeScript, Tailwind, shadcn/ui bileşenleri, React Hook Form + Zod, `@supabase/ssr` (sunucu/istemci/middleware), Lucide, sonner, next-themes (açık/koyu tema).
+
+**Başlıca dosyalar:**
+
+| Yol | Açıklama |
+| --- | --- |
+| `src/lib/supabase/{client,server,middleware}.ts` | Tarayıcı, sunucu ve middleware için Supabase istemcileri (anon anahtar + RLS; `service_role` kullanılmaz) |
+| `src/lib/{calc,format,validators,constants,auth}.ts` | SQL hesaplama motorunun istemci ikizi, Türkçe biçimlendirme, Zod şemaları, enum etiketleri, oturum yardımcıları |
+| `src/app/giris/` | Giriş ekranı (marka paneli + Suspense içinde form) |
+| `src/app/(panel)/` | Korumalı panel düzeni (sidebar, üst bar, okunmamış bildirim) + dashboard |
+| `src/app/(panel)/panel/tedarikcilerim/` | Tedarikçi CRUD (dialog form, soft-delete) |
+| `src/app/(panel)/panel/taleplerim/` | Taşıma talebi listesi + çok kalemli yeni talep formu (canlı CBM/W-M) |
+| `src/app/(panel)/panel/tekliflerim/` | Teklif listesi + detay (kalem dökümü) + onay/revizyon aksiyonları (RPC) |
+| `src/app/actions/` | Server action'lar: kimlik, tedarikçi, talep |
+
+**Çalıştırma:**
+
+```bash
+npm install
+cp .env.example .env.local   # NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_ANON_KEY doldurun
+npm run dev                  # http://localhost:3000
+```
+
+Supabase tip üretimi (opsiyonel, tam tip için): `npm run gen:types`. Demo giriş: `ayse@ornekithalat.com` / `Demo1234!`.
+
+**Doğrulama:** `npx tsc --noEmit` tertemiz; `npm run build` üretim derlemesi 10 rotayı hatasız üretir (`/giris` statik, panel rotaları dinamik).
+
+> Not: Bu Next.js sürümü için bir güvenlik danışma uyarısı yayımlandı; üretim öncesi `next` yamalı bir sürüme yükseltilmeli.
+
 ## Faz planı
 
-1. ✅ **Veri modeli + roller** — bu paket
-2. Supabase Auth, RLS politikaları, Storage kuralları, kritik geçişler için RPC'ler (teklif onayı, ödeme bildirimi, milestone)
-3. Next.js iskeleti (TypeScript, Tailwind, shadcn/ui, React Hook Form, Zod) + müşteri paneli: tedarikçi, talep, teklif onayı
+1. ✅ **Veri modeli + roller**
+2. ✅ **Supabase Auth, RLS politikaları, Storage kuralları, kritik geçiş RPC'leri** — bu paket (101 politika, gerçek oturumlarla test edildi; `docs/security-and-rls.md`)
+3. ✅ **Next.js iskeleti** (TypeScript, Tailwind, shadcn/ui, React Hook Form, Zod) + müşteri paneli: giriş, panel, tedarikçiler, taşıma talebi (canlı CBM/W-M hesabı), teklif onayı/revizyon — bu paket (`npm run build` ile üretim derlemesi doğrulandı)
 4. Depo operasyonu: kabul ekranı, QR/koli, ölçüm, foto/video yükleme, eksik/hasar
 5. Teklif motoru ve fiyatlandırma ekranları (maliyet dökümü, kârlılık, kur)
 6. Konsolidasyon, sefer/konteyner yönetimi, doluluk göstergesi, yük takibi zaman çizelgesi

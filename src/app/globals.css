@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Lacivert — güven ve kurumsallık */
+    --primary: 222 63% 26%;
+    --primary-foreground: 210 40% 98%;
+    /* Turkuaz/mavi — lojistik ve teknoloji */
+    --accent: 190 85% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 94%;
+    --secondary-foreground: 222 47% 20%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 47%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Durum renkleri */
+    --success: 142 60% 36%;          /* yeşil — tamamlanan/onay */
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 48%;           /* turuncu — önemli operasyon uyarısı */
+    --warning-foreground: 0 0% 100%;
+    --danger: 0 72% 45%;             /* kırmızı — gecikme/hasar/kritik */
+    --danger-foreground: 0 0% 100%;
+    --info: 190 85% 42%;             /* turkuaz — bilgi */
+    --info-foreground: 0 0% 100%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 190 85% 42%;
+    --radius: 0.6rem;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 96%;
+    --card: 222 44% 12%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 44% 12%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 210 90% 66%;          /* koyu temada lacivert açılır (okunurluk) */
+    --primary-foreground: 222 47% 11%;
+    --accent: 190 80% 48%;
+    --accent-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 55% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 90% 55%;
+    --warning-foreground: 222 47% 11%;
+    --danger: 0 70% 55%;
+    --danger-foreground: 0 0% 100%;
+    --info: 190 80% 55%;
+    --info-foreground: 222 47% 11%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 24%;
+    --ring: 190 80% 48%;
+  }
+
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; font-feature-settings: "rlig" 1, "calt" 1; }
+}
+
+/* Skeleton shimmer */
+.shimmer {
+  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--secondary)) 50%, hsl(var(--muted)) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
