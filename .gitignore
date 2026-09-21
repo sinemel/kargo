@@ -35,8 +35,8 @@ next-env.d.ts
 supabase/.branches
 supabase/.temp
 supabase/.env
-# Üretilen tip dosyası (CI'da yeniden üretilir; isterseniz bu satırı kaldırıp commit edebilirsiniz)
-src/types/database.ts
+# Not: src/types/database.ts elle yazılmış bir tip alt kümesidir ve repoda kalır
+# (Vercel/CI yerel Supabase çalıştırmadığı için yeniden üretemez).
 
 # --- Test ve kapsama ---
 /coverage
