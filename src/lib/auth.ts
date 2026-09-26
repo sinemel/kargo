@@ -1,6 +1,10 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import {
+  DEMO_MODE, DEMO_USER_ID, DEMO_COMPANY_ID, DEMO_COMPANY_NAME,
+  DEMO_EMAIL, DEMO_FULL_NAME, DEMO_ROLE_CODE, DEMO_ROLE_NAME, DEMO_PERMISSIONS,
+} from "@/lib/demo";
 
 export interface SessionContext {
   userId: string;
@@ -18,6 +22,21 @@ export interface SessionContext {
 // rolünü ve izinlerini toplar. Çok şirketli üyelikte ilk aktif üyelik alınır
 // (Faz 4'te şirket değiştirici eklenecek).
 export const getSession = cache(async (): Promise<SessionContext | null> => {
+  // Demo modu: login yok; sabit demo oturumu döndürülür (GoTrue'ya gidilmez).
+  if (DEMO_MODE) {
+    return {
+      userId: DEMO_USER_ID,
+      email: DEMO_EMAIL,
+      fullName: DEMO_FULL_NAME,
+      companyId: DEMO_COMPANY_ID,
+      companyName: DEMO_COMPANY_NAME,
+      companyType: "customer",
+      roleCode: DEMO_ROLE_CODE,
+      roleName: DEMO_ROLE_NAME,
+      permissions: new Set<string>(DEMO_PERMISSIONS),
+    };
+  }
+
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

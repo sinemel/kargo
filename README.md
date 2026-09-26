@@ -95,7 +95,20 @@ cp .env.example .env.local   # NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_
 npm run dev                  # http://localhost:3000
 ```
 
-Supabase tip üretimi (opsiyonel, tam tip için): `npm run gen:types`. Demo giriş: `ayse@ornekithalat.com` / `Demo1234!`.
+Supabase tip üretimi (opsiyonel, tam tip için): `npm run gen:types`. Gerçek modda demo giriş: `ayse@ornekithalat.com` / `Demo1234!`.
+
+### Demo modu (login olmadan)
+
+`NEXT_PUBLIC_DEMO_MODE=true` iken login kapısı tamamen devre dışı kalır; uygulama doğrudan panele, sabit demo kullanıcı **Ayşe Yılmaz / Örnek İthalat** (customer_admin) oturumuyla açılır. Veri okuma, bu kullanıcı adına sunucu tarafında üretilen kısa ömürlü bir JWT ile yapılır; yani **RLS aynen çalışır** (kiracı izolasyonu korunur) ve GoTrue/`auth.users` gerekmez. Gereken env değişkenleri:
+
+```
+NEXT_PUBLIC_DEMO_MODE=true
+SUPABASE_JWT_SECRET=<Supabase → Project Settings → API → JWT Secret ile aynı>
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+Demo modu **gerçek veritabanını okur**; bu yüzden Supabase projesinin erişilebilir (duraklatılmamış) ve seed'in `public.*` satırlarının yüklü olması gerekir. Üretime çıkarken `NEXT_PUBLIC_DEMO_MODE=false` yapın; auth yeniden devreye girer.
 
 **Doğrulama:** `npx tsc --noEmit` tertemiz; `npm run build` üretim derlemesi 10 rotayı hatasız üretir (`/giris` statik, panel rotaları dinamik).
 

@@ -1,10 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
+import { DEMO_MODE } from "@/lib/demo";
 
 const PUBLIC_PATHS = ["/giris", "/kayit", "/sifremi-unuttum"];
 
 export async function updateSession(request: NextRequest) {
+  // Demo modu: oturum kontrolü yok, her istek olduğu gibi geçer.
+  if (DEMO_MODE) return NextResponse.next({ request });
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(

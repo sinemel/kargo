@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { initials } from "@/lib/format";
 import { signOut } from "@/app/actions/auth";
+import { DEMO_MODE } from "@/lib/demo";
 
 export function UserMenu({ fullName, email, companyName, roleName }: { fullName: string; email: string; companyName: string; roleName: string }) {
   return (
@@ -33,13 +34,19 @@ export function UserMenu({ fullName, email, companyName, roleName }: { fullName:
           <a href="/panel/ayarlar" className="cursor-pointer"><UserIcon className="mr-2 h-4 w-4" />Hesabım</a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <form action={signOut}>
-          <button type="submit" className="w-full">
-            <DropdownMenuItem className="cursor-pointer text-danger focus:text-danger">
-              <LogOut className="mr-2 h-4 w-4" />Çıkış yap
-            </DropdownMenuItem>
-          </button>
-        </form>
+        {DEMO_MODE ? (
+          <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+            Demo modu · giriş devre dışı
+          </DropdownMenuItem>
+        ) : (
+          <form action={signOut}>
+            <button type="submit" className="w-full">
+              <DropdownMenuItem className="cursor-pointer text-danger focus:text-danger">
+                <LogOut className="mr-2 h-4 w-4" />Çıkış yap
+              </DropdownMenuItem>
+            </button>
+          </form>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

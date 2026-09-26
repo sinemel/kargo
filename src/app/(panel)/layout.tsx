@@ -8,6 +8,10 @@ import { NotificationsBell } from "@/components/notifications-bell";
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { createClient } from "@/lib/supabase/server";
 
+// Panel kullanıcıya özel ve canlı veri gösterir; her istekte sunucuda üretilir
+// (özellikle demo modda build-zamanı önizlemeyi engellemek için gerekli).
+export const dynamic = "force-dynamic";
+
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
   const permissions = Array.from(session.permissions);

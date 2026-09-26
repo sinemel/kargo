@@ -1,11 +1,14 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { Ship } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DEMO_MODE } from "@/lib/demo";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Giriş yap" };
 
 export default function LoginPage() {
+  if (DEMO_MODE) redirect("/panel");
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Marka paneli */}
